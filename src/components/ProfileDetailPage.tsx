@@ -38,7 +38,7 @@ const ProfileDetailPage = ({ user, onBack, onExpressInterest }: ProfileDetailPag
                   <img 
                     src={user.photo} 
                     alt={user.name}
-                    className="w-48 h-48 rounded-lg object-cover border-2 border-border mx-auto lg:mx-0"
+                    className="w-56 h-56 rounded-lg object-cover object-center border-2 border-border mx-auto lg:mx-0"
                   />
                   <div className="mt-4 text-center lg:text-left">
                     <Button 

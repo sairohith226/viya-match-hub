@@ -88,7 +88,7 @@ const HomePage = ({ onProfileClick }: HomePageProps) => {
                 <img 
                   src={user.photo} 
                   alt={user.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-32 object-cover object-center"
                 />
                 <div className="absolute top-2 right-2">
                   <Badge variant="secondary" className="bg-background/80 text-foreground">
