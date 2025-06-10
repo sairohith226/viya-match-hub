@@ -49,7 +49,7 @@ const AppContent = () => {
         status: 'sent' as const,
         mediator: { 
           area: selectedUser.location + " Central", 
-          name: "Mrs. Lakshmi" 
+          name: "Mrs. Lakshmi Devi" 
         },
         amount: 199,
         date: new Date().toISOString().split('T')[0],

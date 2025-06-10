@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, User, Menu } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Heart, Home, Users, HelpCircle, User, LogOut, LogIn } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface HeaderProps {
@@ -10,78 +11,113 @@ interface HeaderProps {
 }
 
 const Header = ({ currentPage, onNavigate }: HeaderProps) => {
-  const { isAuthenticated, setIsAuthenticated, currentUser } = useApp();
+  const { isAuthenticated, setIsAuthenticated, matches } = useApp();
 
-  const handleLogin = () => {
-    // Mock login
-    setIsAuthenticated(true);
+  const matchCount = matches.length;
+
+  const handleAuth = () => {
+    if (isAuthenticated) {
+      setIsAuthenticated(false);
+    } else {
+      setIsAuthenticated(true);
+    }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-  };
+  const navItems = [
+    { id: 'home', label: 'Browse Profiles', icon: Home },
+    { id: 'matches', label: 'My Matches', icon: Users, badge: matchCount > 0 ? matchCount : null },
+    { id: 'help', label: 'Help & FAQ', icon: HelpCircle }
+  ];
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <div className="flex items-center">
-            <button 
-              onClick={() => onNavigate('home')}
-              className="flex items-center gap-2 font-bold text-xl text-primary"
-            >
-              <Heart className="w-6 h-6 text-red-500" />
-              Viya
-            </button>
+            <div className="flex-shrink-0 cursor-pointer" onClick={() => onNavigate('home')}>
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Viya</h1>
+                  <p className="text-xs text-muted-foreground">Find Your Perfect Match</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <nav className="hidden md:flex items-center space-x-6">
-            <Button
-              variant={currentPage === 'home' ? 'default' : 'ghost'}
-              onClick={() => onNavigate('home')}
-            >
-              Browse Profiles
-            </Button>
-            {isAuthenticated && (
-              <Button
-                variant={currentPage === 'matches' ? 'default' : 'ghost'}
-                onClick={() => onNavigate('matches')}
-              >
-                My Matches
-              </Button>
-            )}
-            <Button
-              variant={currentPage === 'help' ? 'default' : 'ghost'}
-              onClick={() => onNavigate('help')}
-            >
-              Help & FAQ
-            </Button>
+          {/* Navigation */}
+          <nav className="hidden md:flex space-x-8">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === item.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {item.badge}
+                    </Badge>
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* Auth Section */}
+          <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-foreground">Rohit Kumar</span>
+                </div>
                 <Button 
+                  onClick={handleAuth}
                   variant="outline" 
                   size="sm"
-                  onClick={() => onNavigate('profile')}
+                  className="flex items-center space-x-2"
                 >
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={handleLogout}
-                >
-                  Logout
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:block">Logout</span>
                 </Button>
               </div>
             ) : (
-              <Button onClick={handleLogin}>
-                Login
+              <Button 
+                onClick={handleAuth}
+                className="flex items-center space-x-2"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Login</span>
               </Button>
             )}
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden">
+            <select
+              value={currentPage}
+              onChange={(e) => onNavigate(e.target.value)}
+              className="block w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {navItems.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label} {item.badge ? `(${item.badge})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
