@@ -6,6 +6,7 @@ import HomePage from '../components/HomePage';
 import ProfileDetailPage from '../components/ProfileDetailPage';
 import MyMatchesPage from '../components/MyMatchesPage';
 import HelpFAQPage from '../components/HelpFAQPage';
+import AdminDashboard from '../components/AdminDashboard';
 import InterestModal from '../components/InterestModal';
 import PaymentModal from '../components/PaymentModal';
 import { User } from '../types';
@@ -75,6 +76,8 @@ const AppContent = () => {
         return <MyMatchesPage />;
       case 'help':
         return <HelpFAQPage />;
+      case 'admin':
+        return <AdminDashboard />;
       default:
         return <HomePage onProfileClick={handleProfileClick} />;
     }

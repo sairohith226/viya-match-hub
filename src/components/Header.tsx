@@ -1,9 +1,8 @@
-
 import React from 'react';
+import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Heart, Home, Users, HelpCircle, User, LogOut, LogIn } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   currentPage: string;
@@ -11,113 +10,137 @@ interface HeaderProps {
 }
 
 const Header = ({ currentPage, onNavigate }: HeaderProps) => {
-  const { isAuthenticated, setIsAuthenticated, matches } = useApp();
+  const { isAuthenticated, setIsAuthenticated, currentUser } = useApp();
+  const { toast } = useToast();
 
-  const matchCount = matches.length;
-
-  const handleAuth = () => {
-    if (isAuthenticated) {
-      setIsAuthenticated(false);
-    } else {
-      setIsAuthenticated(true);
-    }
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    toast({
+      title: "Login Successful",
+      description: "You are now logged in.",
+    });
   };
 
-  const navItems = [
-    { id: 'home', label: 'Browse Profiles', icon: Home },
-    { id: 'matches', label: 'My Matches', icon: Users, badge: matchCount > 0 ? matchCount : null },
-    { id: 'help', label: 'Help & FAQ', icon: HelpCircle }
-  ];
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    toast({
+      title: "Logout Successful",
+      description: "You have been logged out.",
+    });
+  };
 
   return (
-    <header className="bg-background border-b border-border sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="flex-shrink-0 cursor-pointer" onClick={() => onNavigate('home')}>
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg">
-                  <Heart className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Viya</h1>
-                  <p className="text-xs text-muted-foreground">Find Your Perfect Match</p>
-                </div>
+            <button 
+              onClick={() => onNavigate('home')}
+              className="flex items-center space-x-3"
+            >
+              <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
+                <Heart className="w-6 h-6 text-white" />
               </div>
-            </div>
+              <span className="text-xl font-bold text-gray-900">Viya</span>
+            </button>
           </div>
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    currentPage === item.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
+            <button
+              onClick={() => onNavigate('home')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentPage === 'home'
+                  ? 'text-pink-600 bg-pink-50'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Browse Profiles
+            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => onNavigate('matches')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  currentPage === 'matches'
+                    ? 'text-pink-600 bg-pink-50'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                My Matches
+              </button>
+            )}
+            <button
+              onClick={() => onNavigate('help')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentPage === 'help'
+                  ? 'text-pink-600 bg-pink-50'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Help & FAQ
+            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  currentPage === 'admin'
+                    ? 'text-pink-600 bg-pink-50'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Admin Dashboard
+              </button>
+            )}
           </nav>
 
-          {/* Auth Section */}
-          <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium text-foreground">Rohit Kumar</span>
-                </div>
-                <Button 
-                  onClick={handleAuth}
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center space-x-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:block">Logout</span>
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                onClick={handleAuth}
-                className="flex items-center space-x-2"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Login</span>
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {!isAuthenticated ? (
+              <Button onClick={handleLogin} variant="default">
+                Login
               </Button>
+            ) : (
+              <>
+                {currentUser && (
+                  <span className="text-gray-700 text-sm">
+                    Welcome, {currentUser.name}
+                  </span>
+                )}
+                <Button onClick={handleLogout} variant="outline">
+                  Logout
+                </Button>
+              </>
             )}
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <select
-              value={currentPage}
-              onChange={(e) => onNavigate(e.target.value)}
-              className="block w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            <button
+              className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500"
+              aria-expanded="false"
+              onClick={() => {
+                // Handle mobile menu toggle
+              }}
             >
-              {navItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label} {item.badge ? `(${item.badge})` : ''}
-                </option>
-              ))}
-            </select>
+              <span className="sr-only">Open menu</span>
+              {/* Heroicon name: outline/menu */}
+              <svg
+                className="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
