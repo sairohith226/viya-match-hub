@@ -1,6 +1,6 @@
 
-import React, { useState, createContext, useContext } from 'react';
-import { Heart, MapPin, Briefcase, Search, Filter, ArrowLeft, GraduationCap, Users, AlertCircle, Phone, Mail, MessageCircle, ChevronDown, ChevronUp, Clock, CheckCircle, XCircle, CreditCard, Shield, Loader2, User, Calendar, IndianRupee, TrendingUp, Eye, Edit, BarChart3, FileText } from 'lucide-react';
+import React, { useState, createContext, useContext, ReactNode } from 'react';
+import { Heart, Search, MapPin, User, Calendar, GraduationCap, Briefcase, Users, Star, ArrowLeft, CreditCard, Shield, CheckCircle, Loader2, X, Eye, Edit, DollarSign, TrendingUp, BarChart3, Filter, Download } from 'lucide-react';
 
 // Types
 interface User {
@@ -10,40 +10,68 @@ interface User {
   profession: string;
   location: string;
   education: string;
-  family: string;
+  height: string;
+  religion: string;
+  caste: string;
+  subCaste: string;
   gothram: string;
-  gender: 'male' | 'female';
+  familyType: string;
+  fatherOccupation: string;
+  motherOccupation: string;
+  siblings: string;
+  income: string;
+  photos: string[];
   bio: string;
-  preferences: string;
-  photo: string;
-  isHidden?: boolean;
+  hobbies: string[];
+  expectations: string;
 }
 
 interface Match {
   id: string;
   user: User;
-  status: 'sent' | 'under_discussion' | 'finalized' | 'rejected';
+  status: 'sent' | 'received' | 'accepted' | 'rejected';
   mediator: {
     area: string;
     name: string;
-    contact?: string;
   };
   amount: number;
   date: string;
-  feedback?: string;
+}
+
+interface Payment {
+  id: string;
+  matchId: string;
+  amount: number;
+  gateway: string;
+  status: 'completed' | 'pending' | 'failed';
+  date: string;
+  userName: string;
+}
+
+interface Commission {
+  id: string;
+  mediatorName: string;
+  area: string;
+  matchId: string;
+  amount: number;
+  status: 'pending' | 'paid';
+  date: string;
 }
 
 interface AppContextType {
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
   currentUser: User | null;
-  allUsers: User[];
   matches: Match[];
   setMatches: (matches: Match[]) => void;
+  payments: Payment[];
+  setPayments: (payments: Payment[]) => void;
+  commissions: Commission[];
+  setCommissions: (commissions: Commission[]) => void;
 }
 
-// Mock Data
-const mockUsers: User[] = [
+// Sample data
+const sampleUsers: User[] = [
   {
     id: '1',
     name: 'Priya Sharma',
@@ -51,68 +79,439 @@ const mockUsers: User[] = [
     profession: 'Software Engineer',
     location: 'Bangalore',
     education: 'B.Tech in Computer Science',
-    family: 'Nuclear family, father is a businessman, mother is a teacher',
-    gothram: 'Bharadwaj',
-    gender: 'female',
-    bio: 'I am a passionate software engineer who loves to code and create innovative solutions.',
-    preferences: 'Looking for a partner who is understanding, supportive, and shares similar values.',
-    photo: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400&h=400&fit=crop&crop=face'
+    height: '5\'4"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Iyer',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Engineer',
+    motherOccupation: 'Teacher',
+    siblings: '1 Sister',
+    income: '₹12-15 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Looking for a caring and understanding life partner who shares similar values.',
+    hobbies: ['Reading', 'Cooking', 'Travel'],
+    expectations: 'Looking for someone who is family-oriented and has good values.'
   },
   {
     id: '2',
-    name: 'Arjun Reddy',
-    age: 29,
+    name: 'Rahul Patel',
+    age: 28,
     profession: 'Doctor',
-    location: 'Hyderabad',
+    location: 'Mumbai',
     education: 'MBBS, MD',
-    family: 'Joint family, traditional values',
-    gothram: 'Kashyap',
-    gender: 'male',
-    bio: 'Dedicated doctor with a passion for helping others and making a difference in healthcare.',
-    preferences: 'Seeking a life partner who values family and has a caring nature.',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
+    height: '5\'9"',
+    religion: 'Hindu',
+    caste: 'Patel',
+    subCaste: 'Kadva Patel',
+    gothram: 'Kashyapa',
+    familyType: 'Joint',
+    fatherOccupation: 'Business',
+    motherOccupation: 'Homemaker',
+    siblings: '1 Brother',
+    income: '₹20-25 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Dedicated doctor looking for a life partner who understands my profession.',
+    hobbies: ['Cricket', 'Music', 'Photography'],
+    expectations: 'Seeking a partner who is supportive and understanding.'
   },
+  // ... adding 18 more profiles for a total of 20
   {
     id: '3',
-    name: 'Anita Patel',
+    name: 'Anita Reddy',
     age: 24,
-    profession: 'Teacher',
-    location: 'Mumbai',
-    education: 'B.Ed, M.A. in English',
-    family: 'Small family, very close-knit',
+    profession: 'Chartered Accountant',
+    location: 'Hyderabad',
+    education: 'B.Com, CA',
+    height: '5\'3"',
+    religion: 'Hindu',
+    caste: 'Reddy',
+    subCaste: 'Kapu',
     gothram: 'Vasishta',
-    gender: 'female',
-    bio: 'Passionate educator who believes in shaping young minds and creating a better future.',
-    preferences: 'Looking for someone who respects education and family values.',
-    photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face'
+    familyType: 'Nuclear',
+    fatherOccupation: 'Government Officer',
+    motherOccupation: 'Bank Manager',
+    siblings: 'No Siblings',
+    income: '₹8-12 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Ambitious and career-focused, looking for an equally driven partner.',
+    hobbies: ['Dancing', 'Painting', 'Yoga'],
+    expectations: 'Someone who respects my career aspirations and supports my goals.'
   },
   {
     id: '4',
     name: 'Vikram Singh',
-    age: 31,
-    profession: 'CA',
+    age: 30,
+    profession: 'Business Owner',
     location: 'Delhi',
-    education: 'CA, B.Com',
-    family: 'Traditional Rajput family',
-    gothram: 'Bharadwaj',
-    gender: 'male',
-    bio: 'Chartered Accountant with strong analytical skills and a love for financial planning.',
-    preferences: 'Seeking a partner who values honesty and has good family background.',
-    photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face'
+    education: 'MBA',
+    height: '5\'10"',
+    religion: 'Sikh',
+    caste: 'Jat',
+    subCaste: 'Sidhu',
+    gothram: 'N/A',
+    familyType: 'Joint',
+    fatherOccupation: 'Retired Army Officer',
+    motherOccupation: 'Social Worker',
+    siblings: '2 Sisters',
+    income: '₹25-30 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Family-oriented businessman looking for a traditional yet modern partner.',
+    hobbies: ['Gym', 'Traveling', 'Reading'],
+    expectations: 'Looking for someone who can balance tradition with modernity.'
   },
   {
     id: '5',
-    name: 'Meera Krishnan',
-    age: 27,
-    profession: 'Software Developer',
+    name: 'Meera Nair',
+    age: 25,
+    profession: 'Teacher',
+    location: 'Kochi',
+    education: 'B.Ed, M.A',
+    height: '5\'2"',
+    religion: 'Hindu',
+    caste: 'Nair',
+    subCaste: 'Menon',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Doctor',
+    motherOccupation: 'Nurse',
+    siblings: '1 Brother',
+    income: '₹5-8 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Passionate about education and nurturing young minds.',
+    hobbies: ['Classical Music', 'Gardening', 'Cooking'],
+    expectations: 'Seeking a kind and understanding partner who values education.'
+  },
+  {
+    id: '6',
+    name: 'Arjun Gupta',
+    age: 29,
+    profession: 'Marketing Manager',
     location: 'Pune',
-    education: 'B.Tech in IT',
-    family: 'South Indian family, traditional yet modern',
-    gothram: 'Atri',
-    gender: 'female',
-    bio: 'Tech enthusiast who loves solving complex problems and learning new technologies.',
-    preferences: 'Looking for someone who is ambitious and supportive of career goals.',
-    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face'
+    education: 'MBA Marketing',
+    height: '5\'8"',
+    religion: 'Hindu',
+    caste: 'Vaishya',
+    subCaste: 'Baniya',
+    gothram: 'Kashyapa',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Businessman',
+    motherOccupation: 'Homemaker',
+    siblings: '1 Sister',
+    income: '₹15-18 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Creative marketing professional with a zest for life.',
+    hobbies: ['Football', 'Movies', 'Cooking'],
+    expectations: 'Looking for a cheerful and supportive life partner.'
+  },
+  {
+    id: '7',
+    name: 'Kavya Iyer',
+    age: 27,
+    profession: 'Data Scientist',
+    location: 'Chennai',
+    education: 'M.Tech Data Science',
+    height: '5\'5"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Iyer',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Professor',
+    motherOccupation: 'Doctor',
+    siblings: '1 Brother',
+    income: '₹18-22 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Tech enthusiast passionate about solving complex problems.',
+    hobbies: ['Coding', 'Chess', 'Classical Dance'],
+    expectations: 'Seeking an intellectual partner who shares my passion for technology.'
+  },
+  {
+    id: '8',
+    name: 'Rohit Joshi',
+    age: 31,
+    profession: 'Civil Engineer',
+    location: 'Ahmedabad',
+    education: 'B.Tech Civil',
+    height: '5\'7"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Joshi',
+    gothram: 'Vasishta',
+    familyType: 'Joint',
+    fatherOccupation: 'Contractor',
+    motherOccupation: 'Teacher',
+    siblings: '2 Brothers',
+    income: '₹12-15 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Dedicated engineer with strong family values.',
+    hobbies: ['Cricket', 'Photography', 'Trekking'],
+    expectations: 'Looking for a family-oriented partner with traditional values.'
+  },
+  {
+    id: '9',
+    name: 'Deepika Rao',
+    age: 23,
+    profession: 'Fashion Designer',
+    location: 'Bangalore',
+    education: 'Fashion Design',
+    height: '5\'6"',
+    religion: 'Hindu',
+    caste: 'Rao',
+    subCaste: 'Desai',
+    gothram: 'Kashyapa',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Architect',
+    motherOccupation: 'Interior Designer',
+    siblings: '1 Sister',
+    income: '₹6-10 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Creative and artistic with a passion for fashion.',
+    hobbies: ['Sketching', 'Fashion Blogging', 'Travel'],
+    expectations: 'Seeking a creative and supportive partner.'
+  },
+  {
+    id: '10',
+    name: 'Karthik Menon',
+    age: 28,
+    profession: 'Financial Analyst',
+    location: 'Mumbai',
+    education: 'CFA, MBA Finance',
+    height: '5\'9"',
+    religion: 'Hindu',
+    caste: 'Menon',
+    subCaste: 'Nair',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Bank Manager',
+    motherOccupation: 'Accountant',
+    siblings: 'No Siblings',
+    income: '₹20-25 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Finance professional with analytical mindset.',
+    hobbies: ['Stock Market', 'Badminton', 'Reading'],
+    expectations: 'Looking for an intelligent and ambitious partner.'
+  },
+  {
+    id: '11',
+    name: 'Shruti Agarwal',
+    age: 25,
+    profession: 'Pharmacist',
+    location: 'Jaipur',
+    education: 'B.Pharm',
+    height: '5\'3"',
+    religion: 'Hindu',
+    caste: 'Agarwal',
+    subCaste: 'Baniya',
+    gothram: 'Kashyapa',
+    familyType: 'Joint',
+    fatherOccupation: 'Jeweler',
+    motherOccupation: 'Homemaker',
+    siblings: '1 Brother, 1 Sister',
+    income: '₹4-6 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Healthcare professional with a caring nature.',
+    hobbies: ['Cooking', 'Handicrafts', 'Volunteering'],
+    expectations: 'Seeking a caring and family-oriented partner.'
+  },
+  {
+    id: '12',
+    name: 'Nitin Kumar',
+    age: 32,
+    profession: 'Government Officer',
+    location: 'Lucknow',
+    education: 'B.A, Civil Services',
+    height: '5\'8"',
+    religion: 'Hindu',
+    caste: 'Kayastha',
+    subCaste: 'Srivastava',
+    gothram: 'Vasishta',
+    familyType: 'Joint',
+    fatherOccupation: 'Retired Teacher',
+    motherOccupation: 'Homemaker',
+    siblings: '1 Sister',
+    income: '₹10-12 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Dedicated public servant committed to social service.',
+    hobbies: ['Reading', 'Social Work', 'Chess'],
+    expectations: 'Looking for a partner who shares my commitment to social service.'
+  },
+  {
+    id: '13',
+    name: 'Pooja Desai',
+    age: 26,
+    profession: 'Graphic Designer',
+    location: 'Surat',
+    education: 'B.Des Graphic Design',
+    height: '5\'4"',
+    religion: 'Hindu',
+    caste: 'Patel',
+    subCaste: 'Desai',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Diamond Merchant',
+    motherOccupation: 'Fashion Designer',
+    siblings: '1 Brother',
+    income: '₹7-10 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Creative designer with an eye for aesthetics.',
+    hobbies: ['Digital Art', 'Photography', 'Traveling'],
+    expectations: 'Seeking a creative and understanding partner.'
+  },
+  {
+    id: '14',
+    name: 'Ajay Yadav',
+    age: 29,
+    profession: 'Police Officer',
+    location: 'Indore',
+    education: 'B.A, Police Training',
+    height: '5\'10"',
+    religion: 'Hindu',
+    caste: 'Yadav',
+    subCaste: 'Ahir',
+    gothram: 'Kashyapa',
+    familyType: 'Joint',
+    fatherOccupation: 'Farmer',
+    motherOccupation: 'Anganwadi Worker',
+    siblings: '2 Brothers',
+    income: '₹8-10 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Disciplined officer dedicated to serving society.',
+    hobbies: ['Martial Arts', 'Fitness', 'Social Service'],
+    expectations: 'Looking for a supportive and understanding partner.'
+  },
+  {
+    id: '15',
+    name: 'Riya Malhotra',
+    age: 24,
+    profession: 'Journalist',
+    location: 'Delhi',
+    education: 'Mass Communication',
+    height: '5\'5"',
+    religion: 'Hindu',
+    caste: 'Khatri',
+    subCaste: 'Malhotra',
+    gothram: 'Vasishta',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Media Executive',
+    motherOccupation: 'PR Manager',
+    siblings: '1 Sister',
+    income: '₹6-9 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Passionate journalist with a love for storytelling.',
+    hobbies: ['Writing', 'Current Affairs', 'Debates'],
+    expectations: 'Seeking an intellectually stimulating partner.'
+  },
+  {
+    id: '16',
+    name: 'Sandeep Chouhan',
+    age: 33,
+    profession: 'Army Officer',
+    location: 'Bhopal',
+    education: 'B.Tech, NDA',
+    height: '6\'0"',
+    religion: 'Hindu',
+    caste: 'Rajput',
+    subCaste: 'Chouhan',
+    gothram: 'Bharadwaja',
+    familyType: 'Joint',
+    fatherOccupation: 'Retired Army',
+    motherOccupation: 'Homemaker',
+    siblings: '1 Brother',
+    income: '₹15-18 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Disciplined army officer with strong moral values.',
+    hobbies: ['Adventure Sports', 'Reading', 'Fitness'],
+    expectations: 'Looking for a partner who can handle military lifestyle.'
+  },
+  {
+    id: '17',
+    name: 'Neha Sinha',
+    age: 27,
+    profession: 'HR Manager',
+    location: 'Kolkata',
+    education: 'MBA HR',
+    height: '5\'4"',
+    religion: 'Hindu',
+    caste: 'Kayastha',
+    subCaste: 'Sinha',
+    gothram: 'Kashyapa',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Professor',
+    motherOccupation: 'School Principal',
+    siblings: '1 Brother',
+    income: '₹12-15 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'People-oriented HR professional with excellent communication skills.',
+    hobbies: ['Dancing', 'Event Planning', 'Reading'],
+    expectations: 'Seeking a well-educated and cultured partner.'
+  },
+  {
+    id: '18',
+    name: 'Manish Sharma',
+    age: 30,
+    profession: 'Architect',
+    location: 'Jaipur',
+    education: 'B.Arch',
+    height: '5\'9"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Sharma',
+    gothram: 'Vasishta',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Civil Engineer',
+    motherOccupation: 'Interior Designer',
+    siblings: '1 Sister',
+    income: '₹10-14 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Creative architect passionate about sustainable design.',
+    hobbies: ['Sketching', 'Travel', 'Photography'],
+    expectations: 'Looking for a creative and environmentally conscious partner.'
+  },
+  {
+    id: '19',
+    name: 'Divya Pillai',
+    age: 28,
+    profession: 'Physiotherapist',
+    location: 'Trivandrum',
+    education: 'BPT, MPT',
+    height: '5\'3"',
+    religion: 'Hindu',
+    caste: 'Nair',
+    subCaste: 'Pillai',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Doctor',
+    motherOccupation: 'Nurse',
+    siblings: '1 Brother',
+    income: '₹6-8 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Compassionate healthcare professional dedicated to helping others.',
+    hobbies: ['Yoga', 'Classical Music', 'Gardening'],
+    expectations: 'Seeking a health-conscious and caring partner.'
+  },
+  {
+    id: '20',
+    name: 'Rajesh Pandey',
+    age: 31,
+    profession: 'Research Scientist',
+    location: 'Pune',
+    education: 'PhD Chemistry',
+    height: '5\'8"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Pandey',
+    gothram: 'Kashyapa',
+    familyType: 'Joint',
+    fatherOccupation: 'Professor',
+    motherOccupation: 'Researcher',
+    siblings: '1 Sister',
+    income: '₹16-20 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Dedicated researcher contributing to scientific advancement.',
+    hobbies: ['Research', 'Reading Scientific Journals', 'Chess'],
+    expectations: 'Looking for an intellectually compatible and supportive partner.'
   }
 ];
 
@@ -127,29 +526,126 @@ const useApp = () => {
   return context;
 };
 
+const AppProvider = ({ children }: { children: ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([
+    {
+      id: '1',
+      matchId: '1',
+      amount: 199,
+      gateway: 'Razorpay',
+      status: 'completed',
+      date: '2024-01-15',
+      userName: 'Priya Sharma'
+    },
+    {
+      id: '2',
+      matchId: '2',
+      amount: 199,
+      gateway: 'Stripe',
+      status: 'completed',
+      date: '2024-01-14',
+      userName: 'Rahul Patel'
+    }
+  ]);
+  const [commissions, setCommissions] = useState<Commission[]>([
+    {
+      id: '1',
+      mediatorName: 'Mrs. Lakshmi Devi',
+      area: 'Bangalore Central',
+      matchId: '1',
+      amount: 50,
+      status: 'pending',
+      date: '2024-01-15'
+    },
+    {
+      id: '2',
+      mediatorName: 'Mr. Rajesh Kumar',
+      area: 'Mumbai West',
+      matchId: '2',
+      amount: 50,
+      status: 'paid',
+      date: '2024-01-14'
+    }
+  ]);
+
+  const currentUser = isAuthenticated ? {
+    id: 'current-user',
+    name: 'John Doe',
+    age: 28,
+    profession: 'Software Engineer',
+    location: 'Bangalore',
+    education: 'B.Tech',
+    height: '5\'8"',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    subCaste: 'Iyer',
+    gothram: 'Bharadwaja',
+    familyType: 'Nuclear',
+    fatherOccupation: 'Engineer',
+    motherOccupation: 'Teacher',
+    siblings: '1 Sister',
+    income: '₹15-20 LPA',
+    photos: ['/placeholder.svg'],
+    bio: 'Looking for a life partner',
+    hobbies: ['Reading', 'Travel'],
+    expectations: 'Looking for understanding partner'
+  } : null;
+
+  return (
+    <AppContext.Provider value={{
+      isAuthenticated,
+      setIsAuthenticated,
+      currentUser,
+      matches,
+      setMatches,
+      payments,
+      setPayments,
+      commissions,
+      setCommissions
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
 // UI Components
-const Button = ({ children, className = '', variant = 'default', size = 'default', disabled = false, onClick, ...props }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: {
+  children: any;
+  onClick: any;
+  variant?: string;
+  size?: string;
+  className?: string;
+  disabled?: boolean;
+  [key: string]: any;
+}) => {
+  const baseClasses = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+  
   const variants = {
     default: 'bg-primary text-primary-foreground hover:bg-primary/90',
     destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
     outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
     secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
     ghost: 'hover:bg-accent hover:text-accent-foreground',
-    link: 'text-primary underline-offset-4 hover:underline'
+    link: 'text-primary underline-offset-4 hover:underline',
   };
+
   const sizes = {
     default: 'h-10 px-4 py-2',
     sm: 'h-9 rounded-md px-3',
     lg: 'h-11 rounded-md px-8',
-    icon: 'h-10 w-10'
+    icon: 'h-10 w-10',
   };
+
+  const variantClass = variants[variant as keyof typeof variants] || variants.default;
+  const sizeClass = sizes[size as keyof typeof sizes] || sizes.default;
 
   return (
     <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled}
+      className={`${baseClasses} ${variantClass} ${sizeClass} ${className}`}
       onClick={onClick}
+      disabled={disabled}
       {...props}
     >
       {children}
@@ -157,183 +653,147 @@ const Button = ({ children, className = '', variant = 'default', size = 'default
   );
 };
 
-const Card = ({ children, className = '', ...props }) => (
-  <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`} {...props}>
+const Card = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>
     {children}
   </div>
 );
 
-const CardHeader = ({ children, className = '', ...props }) => (
-  <div className={`flex flex-col space-y-1.5 p-6 ${className}`} {...props}>
-    {children}
-  </div>
+const CardContent = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <div className={`p-6 ${className}`}>{children}</div>
 );
 
-const CardTitle = ({ children, className = '', ...props }) => (
-  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`} {...props}>
-    {children}
-  </h3>
+const CardHeader = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>{children}</div>
 );
 
-const CardContent = ({ children, className = '', ...props }) => (
-  <div className={`p-6 pt-0 ${className}`} {...props}>
-    {children}
-  </div>
+const CardTitle = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
 );
 
-const Badge = ({ children, className = '', variant = 'default', ...props }) => {
-  const variants = {
-    default: 'bg-primary text-primary-foreground hover:bg-primary/80',
-    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/80',
-    outline: 'text-foreground border border-input bg-background hover:bg-accent hover:text-accent-foreground'
-  };
+const Input = ({ className = '', ...props }: { className?: string; [key: string]: any }) => (
+  <input
+    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    {...props}
+  />
+);
 
-  return (
-    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variants[variant]} ${className}`} {...props}>
+const Select = ({ children, value, onValueChange }: { children: ReactNode; value: string; onValueChange: (value: string) => void }) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    >
       {children}
-    </div>
-  );
-};
+    </select>
+  </div>
+);
 
-const Dialog = ({ open, onOpenChange, children }) => {
+const SelectContent = ({ children }: { children: ReactNode }) => <>{children}</>;
+const SelectItem = ({ children, value }: { children: ReactNode; value: string }) => (
+  <option value={value}>{children}</option>
+);
+const SelectTrigger = ({ children }: { children: ReactNode }) => <>{children}</>;
+const SelectValue = ({ placeholder }: { placeholder: string }) => <option value="">{placeholder}</option>;
+
+const Dialog = ({ children, open, onOpenChange }: { children: ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) => {
   if (!open) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/80" onClick={() => onOpenChange(false)} />
-      <div className="relative bg-background p-6 rounded-lg shadow-lg border max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100"
-        >
-          <XCircle className="h-4 w-4" />
-        </button>
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div className="bg-background rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {children}
       </div>
     </div>
   );
 };
 
-const DialogHeader = ({ children, className = '' }) => (
-  <div className={`flex flex-col space-y-1.5 text-center sm:text-left ${className}`}>
-    {children}
-  </div>
+const DialogContent = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <div className={`relative ${className}`}>{children}</div>
 );
 
-const DialogTitle = ({ children, className = '' }) => (
-  <h2 className={`text-lg font-semibold leading-none tracking-tight ${className}`}>
-    {children}
-  </h2>
+const DialogHeader = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <div className={`p-6 ${className}`}>{children}</div>
 );
 
-const DialogContent = ({ children, className = '' }) => (
-  <div className={className}>
-    {children}
-  </div>
+const DialogTitle = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
+  <h2 className={`text-lg font-semibold ${className}`}>{children}</h2>
 );
 
-const Tabs = ({ defaultValue, children, className = '' }) => {
-  const [activeTab, setActiveTab] = useState(defaultValue);
-  
-  return (
-    <div className={className}>
-      {React.Children.map(children, child =>
-        React.cloneElement(child, { activeTab, setActiveTab })
-      )}
-    </div>
-  );
-};
+// Custom Tabs component
+const Tabs = ({ children, activeTab, setActiveTab, className = '' }: { 
+  children: any; 
+  activeTab: any; 
+  setActiveTab: any; 
+  className?: string;
+}) => (
+  <div className={className}>{children}</div>
+);
 
-const TabsList = ({ children, className = '', activeTab, setActiveTab }) => (
-  <div className={`inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground ${className}`}>
-    {React.Children.map(children, child =>
+const TabsList = ({ children, activeTab, setActiveTab }: { 
+  children: any; 
+  activeTab: any; 
+  setActiveTab: any;
+}) => (
+  <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+    {React.Children.map(children, (child) =>
       React.cloneElement(child, { activeTab, setActiveTab })
     )}
   </div>
 );
 
-const TabsTrigger = ({ value, children, activeTab, setActiveTab }) => (
+const TabsTrigger = ({ children, value, activeTab, setActiveTab }: { 
+  children: any; 
+  value: any; 
+  activeTab: any; 
+  setActiveTab: any;
+}) => (
   <button
     onClick={() => setActiveTab(value)}
     className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-      activeTab === value
-        ? 'bg-background text-foreground shadow-sm'
-        : 'text-muted-foreground'
+      activeTab === value ? 'bg-background text-foreground shadow-sm' : ''
     }`}
   >
     {children}
   </button>
 );
 
-const TabsContent = ({ value, children, activeTab }) => {
+const TabsContent = ({ children, value, activeTab }: { 
+  children: any; 
+  value: any; 
+  activeTab: any;
+}) => {
   if (activeTab !== value) return null;
-  
-  return (
-    <div className="mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-      {children}
-    </div>
-  );
+  return <div className="mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">{children}</div>;
 };
 
-const Table = ({ children, className = '' }) => (
-  <div className="relative w-full overflow-auto">
-    <table className={`w-full caption-bottom text-sm ${className}`}>
-      {children}
-    </table>
-  </div>
-);
-
-const TableHeader = ({ children, className = '' }) => (
-  <thead className={`[&_tr]:border-b ${className}`}>
-    {children}
-  </thead>
-);
-
-const TableBody = ({ children, className = '' }) => (
-  <tbody className={`[&_tr:last-child]:border-0 ${className}`}>
-    {children}
-  </tbody>
-);
-
-const TableRow = ({ children, className = '' }) => (
-  <tr className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${className}`}>
-    {children}
-  </tr>
-);
-
-const TableHead = ({ children, className = '' }) => (
-  <th className={`h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 ${className}`}>
-    {children}
-  </th>
-);
-
-const TableCell = ({ children, className = '' }) => (
-  <td className={`p-4 align-middle [&:has([role=checkbox])]:pr-0 ${className}`}>
-    {children}
-  </td>
-);
-
-// Toast Hook
+// Toast hook
 const useToast = () => {
-  const [toasts, setToasts] = useState([]);
-
-  const toast = ({ title, description, variant = 'default', duration = 5000 }) => {
-    const id = Date.now();
-    const newToast = { id, title, description, variant };
-    
-    setToasts(prev => [...prev, newToast]);
+  const toast = ({ title, description, variant = 'default', duration = 3000 }: {
+    title: string;
+    description?: string;
+    variant?: string;
+    duration?: number;
+  }) => {
+    // Simple toast implementation
+    const toastEl = document.createElement('div');
+    toastEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+      variant === 'destructive' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+    }`;
+    toastEl.innerHTML = `<div class="font-semibold">${title}</div>${description ? `<div class="text-sm">${description}</div>` : ''}`;
+    document.body.appendChild(toastEl);
     
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      document.body.removeChild(toastEl);
     }, duration);
   };
 
-  return { toast, toasts };
+  return { toast };
 };
 
 // Components
-const Header = ({ currentPage, onNavigate }) => {
+const Header = ({ currentPage, onNavigate }: { currentPage: string; onNavigate: (page: string) => void }) => {
   const { isAuthenticated, setIsAuthenticated, currentUser } = useApp();
   const { toast } = useToast();
 
@@ -348,7 +808,7 @@ const Header = ({ currentPage, onNavigate }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     toast({
-      title: "Logout Successful",
+      title: "Logout Successful", 
       description: "You have been logged out.",
     });
   };
@@ -427,228 +887,328 @@ const Header = ({ currentPage, onNavigate }) => {
   );
 };
 
-const HomePage = ({ onProfileClick }) => {
-  const { allUsers } = useApp();
+const HomePage = ({ onProfileClick }: { onProfileClick: (user: User) => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterLocation, setFilterLocation] = useState('');
-  const [filterProfession, setFilterProfession] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [professionFilter, setProfessionFilter] = useState('');
+  const [ageFilter, setAgeFilter] = useState('');
 
-  const filteredUsers = allUsers.filter(user => {
-    if (user.isHidden) return false;
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.profession.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation = !filterLocation || user.location.includes(filterLocation);
-    const matchesProfession = !filterProfession || user.profession.includes(filterProfession);
-    return matchesSearch && matchesLocation && matchesProfession;
+  const filteredUsers = sampleUsers.filter(user => {
+    return (
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (locationFilter === '' || user.location === locationFilter) &&
+      (professionFilter === '' || user.profession === professionFilter) &&
+      (ageFilter === '' || (
+        ageFilter === '20-25' ? user.age >= 20 && user.age <= 25 :
+        ageFilter === '26-30' ? user.age >= 26 && user.age <= 30 :
+        ageFilter === '31-35' ? user.age >= 31 && user.age <= 35 :
+        true
+      ))
+    );
   });
 
+  const locations = [...new Set(sampleUsers.map(user => user.location))];
+  const professions = [...new Set(sampleUsers.map(user => user.profession))];
+
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Find Your Perfect Match</h1>
-          <p className="text-muted-foreground">Discover meaningful connections through our trusted matrimonial platform</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Search and Filters */}
+      <div className="mb-8 space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Input
+            type="text"
+            placeholder="Search profiles..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Location" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Locations</SelectItem>
+              {locations.map(location => (
+                <SelectItem key={location} value={location}>{location}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by name or profession..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <select
-              value={filterLocation}
-              onChange={(e) => setFilterLocation(e.target.value)}
-              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="">All Locations</option>
-              <option value="Bangalore">Bangalore</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Pune">Pune</option>
-            </select>
-          </div>
+          <Select value={professionFilter} onValueChange={setProfessionFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Profession" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Professions</SelectItem>
+              {professions.map(profession => (
+                <SelectItem key={profession} value={profession}>{profession}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={ageFilter} onValueChange={setAgeFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Age Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Ages</SelectItem>
+              <SelectItem value="20-25">20-25 years</SelectItem>
+              <SelectItem value="26-30">26-30 years</SelectItem>
+              <SelectItem value="31-35">31-35 years</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      </div>
 
-        <div className="mb-4">
-          <p className="text-muted-foreground">{filteredUsers.length} profiles found</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user) => (
-            <Card key={user.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative">
-                <img 
-                  src={user.photo} 
-                  alt={user.name}
-                  className="w-full h-48 object-cover object-center"
-                />
-                <div className="absolute top-2 right-2">
-                  <Badge variant="secondary" className="bg-background/80 text-foreground">
-                    {user.age} years
-                  </Badge>
+      {/* Profiles Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredUsers.map((user) => (
+          <Card key={user.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onProfileClick(user)}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
+                  <p className="text-gray-600 text-sm">{user.age} years</p>
                 </div>
               </div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-foreground mb-2">{user.name}</h3>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{user.profession}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{user.location}</span>
-                  </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center text-gray-600 text-sm">
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  {user.profession}
                 </div>
-                <div className="flex gap-2 mb-4">
-                  <Badge variant="outline">{user.gothram} Gothram</Badge>
-                  <Badge variant="outline">{user.gender}</Badge>
+                <div className="flex items-center text-gray-600 text-sm">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  {user.location}
                 </div>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{user.bio}</p>
-                <Button 
-                  onClick={() => onProfileClick(user)}
-                  className="w-full"
-                  variant="outline"
-                >
-                  View Profile
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <Filter className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No profiles found</h3>
-            <p className="text-muted-foreground">Try adjusting your search criteria</p>
-          </div>
-        )}
+                <div className="flex items-center text-gray-600 text-sm">
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  {user.education}
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-gray-700 text-sm line-clamp-2">{user.bio}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {filteredUsers.length === 0 && (
+        <div className="text-center py-12">
+          <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No profiles found</h3>
+          <p className="text-gray-600">Try adjusting your search filters</p>
+        </div>
+      )}
     </div>
   );
 };
 
-const ProfileDetailPage = ({ user, onBack, onExpressInterest }) => {
-  const currentUserGothram = "Bharadwaj";
-  const isGothramCompatible = user.gothram !== currentUserGothram;
-
+const ProfileDetailPage = ({ 
+  user, 
+  onBack, 
+  onExpressInterest 
+}: { 
+  user: User; 
+  onBack: () => void; 
+  onExpressInterest: () => void;
+}) => {
+  const { currentUser } = useApp();
+  
+  // Check Gothram compatibility
+  const isGothramCompatible = !currentUser || currentUser.gothram !== user.gothram;
+  
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        <Button onClick={onBack} variant="ghost" className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Profiles
-        </Button>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Button onClick={onBack} variant="ghost" className="mb-6">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Profiles
+      </Button>
 
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Profile Image */}
+        <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex-shrink-0">
-                  <img 
-                    src={user.photo} 
-                    alt={user.name}
-                    className="w-56 h-56 rounded-lg object-cover object-center border-2 border-border mx-auto lg:mx-0"
-                  />
-                  <div className="mt-4 text-center lg:text-left">
-                    <Button 
-                      onClick={onExpressInterest}
-                      className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
-                      size="lg"
-                      disabled={!isGothramCompatible}
-                    >
-                      {isGothramCompatible ? (
-                        <>
-                          <Heart className="w-4 h-4 mr-2" />
-                          Express Interest - ₹199
-                        </>
-                      ) : (
-                        'Cannot Express Interest'
-                      )}
-                    </Button>
-                    {!isGothramCompatible && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Same Gothram match not allowed
-                      </p>
-                    )}
+              <div className="w-full h-80 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center mb-4">
+                <User className="w-24 h-24 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{user.name}</h1>
+              <div className="flex items-center text-gray-600 mb-4">
+                <Calendar className="w-4 h-4 mr-2" />
+                {user.age} years old
+              </div>
+              
+              {/* Gothram Compatibility Alert */}
+              {!isGothramCompatible && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                  <div className="flex items-center">
+                    <div className="text-red-600">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">Gothram Compatibility Issue</h3>
+                      <p className="text-sm text-red-700 mt-1">Same Gothram match not recommended in Hindu tradition</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <div className="space-y-4">
-                    <div>
-                      <h1 className="text-3xl font-bold text-foreground mb-2">{user.name}</h1>
-                      <div className="flex flex-wrap gap-3 mb-4">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="text-lg font-medium">{user.age} years</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Briefcase className="w-4 h-4" />
-                          <span>{user.profession}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="w-4 h-4" />
-                          <span>{user.location}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="text-sm">
-                          {user.gender === 'male' ? '👨 Male' : '👩 Female'}
-                        </Badge>
-                        <Badge variant="outline" className="text-sm">
-                          {user.gothram} Gothram
-                        </Badge>
-                        {isGothramCompatible ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200 text-sm">
-                            ✓ Compatible Gothram
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive" className="text-sm">
-                            ✗ Same Gothram
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-muted-foreground text-base leading-relaxed">{user.bio}</p>
-                    </div>
-                  </div>
+              )}
+
+              <Button 
+                onClick={onExpressInterest} 
+                className="w-full"
+                disabled={!isGothramCompatible}
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                {isGothramCompatible ? 'Express Interest' : 'Not Compatible'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Profile Details */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Profession</label>
+                  <p className="text-gray-900">{user.profession}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Location</label>
+                  <p className="text-gray-900">{user.location}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Education</label>
+                  <p className="text-gray-900">{user.education}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Height</label>
+                  <p className="text-gray-900">{user.height}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Income</label>
+                  <p className="text-gray-900">{user.income}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Family Type</label>
+                  <p className="text-gray-900">{user.familyType}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {!isGothramCompatible && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 text-red-800">
-                  <AlertCircle className="w-6 h-6 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">Same Gothram Match Detected</h3>
-                    <p className="text-red-700 mb-2">
-                      According to traditional customs and community rules, marriages within the same Gothram 
-                      ({user.gothram}) are not recommended and therefore not permitted on our platform.
-                    </p>
+          {/* Religious Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Religious Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Religion</label>
+                  <p className="text-gray-900">{user.religion}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Caste</label>
+                  <p className="text-gray-900">{user.caste}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Sub Caste</label>
+                  <p className="text-gray-900">{user.subCaste}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Gothram</label>
+                  <p className="text-gray-900">{user.gothram}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Family Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Family Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Father's Occupation</label>
+                  <p className="text-gray-900">{user.fatherOccupation}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Mother's Occupation</label>
+                  <p className="text-gray-900">{user.motherOccupation}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Siblings</label>
+                  <p className="text-gray-900">{user.siblings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bio and Interests */}
+          <Card>
+            <CardHeader>
+              <CardTitle>About</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Bio</label>
+                  <p className="text-gray-900 mt-1">{user.bio}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Hobbies</label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {user.hobbies.map((hobby, index) => (
+                      <span key={index} className="bg-pink-100 text-pink-800 px-2 py-1 rounded-md text-sm">
+                        {hobby}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Partner Expectations</label>
+                  <p className="text-gray-900 mt-1">{user.expectations}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 };
 
-const InterestModal = ({ isOpen, onClose, user, onPayment }) => {
+const InterestModal = ({ 
+  isOpen, 
+  onClose, 
+  user, 
+  onPayment 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  user: User | null; 
+  onPayment: () => void;
+}) => {
   if (!user) return null;
 
   const mediator = {
@@ -658,14 +1218,14 @@ const InterestModal = ({ isOpen, onClose, user, onPayment }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold text-primary">
             Express Interest
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-4 p-6">
           <Card className="border-2 border-green-200 bg-green-50">
             <CardContent className="p-4 text-center">
               <User className="w-8 h-8 mx-auto mb-2 text-green-600" />
@@ -678,6 +1238,19 @@ const InterestModal = ({ isOpen, onClose, user, onPayment }) => {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="font-medium">Mediator Information</p>
+                  <p className="text-sm text-muted-foreground">Area: {mediator.area}</p>
+                  <p className="text-sm text-muted-foreground">Name: {mediator.name}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-2 border-orange-200 bg-orange-50">
             <CardContent className="p-4 text-center">
               <CreditCard className="w-8 h-8 mx-auto mb-2 text-orange-600" />
@@ -687,11 +1260,7 @@ const InterestModal = ({ isOpen, onClose, user, onPayment }) => {
           </Card>
 
           <div className="space-y-2">
-            <Button 
-              onClick={onPayment}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
-              size="lg"
-            >
+            <Button onClick={onPayment} className="w-full" size="lg">
               Proceed to Payment - ₹199
             </Button>
             <Button onClick={onClose} variant="outline" className="w-full">
@@ -704,48 +1273,49 @@ const InterestModal = ({ isOpen, onClose, user, onPayment }) => {
   );
 };
 
-const PaymentModal = ({ isOpen, onClose, amount, userName, onSuccess }) => {
+const PaymentModal = ({ 
+  isOpen, 
+  onClose, 
+  amount, 
+  userName, 
+  onSuccess 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  amount: number; 
+  userName: string; 
+  onSuccess: () => void;
+}) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState(null);
   const { toast } = useToast();
 
-  const handlePayment = async (method) => {
+  const handlePayment = async () => {
     setIsProcessing(true);
-    setSelectedMethod(method);
     
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setIsProcessing(false);
-      onClose();
-      onSuccess();
-      
-      toast({
-        title: "🎉 Payment Successful!",
-        description: `Interest expressed for ${userName}. Mediator will contact you within 24 hours.`,
-        duration: 6000,
-      });
-    } catch (error) {
-      setIsProcessing(false);
-      toast({
-        title: "Payment Failed",
-        description: "There was an issue processing your payment. Please try again.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setIsProcessing(false);
+    onClose();
+    onSuccess();
+    
+    toast({
+      title: "🎉 Payment Successful!",
+      description: `Interest expressed for ${userName}. Mediator will contact you within 24 hours.`,
+      duration: 6000,
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-semibold text-primary">
+          <DialogTitle className="text-center text-xl font-semibold">
             Complete Payment
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-4 p-6">
           <Card className="border-2 border-blue-200 bg-blue-50">
             <CardContent className="p-4 text-center">
               <CreditCard className="w-8 h-8 mx-auto mb-2 text-blue-600" />
@@ -754,43 +1324,21 @@ const PaymentModal = ({ isOpen, onClose, amount, userName, onSuccess }) => {
             </CardContent>
           </Card>
 
-          <div className="space-y-3">
-            <Button 
-              onClick={() => handlePayment('razorpay')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              size="lg"
-              disabled={isProcessing}
-            >
-              {isProcessing && selectedMethod === 'razorpay' ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing Payment...
-                </div>
-              ) : (
-                'Pay with Razorpay'
-              )}
-            </Button>
-
-            <Button 
-              onClick={() => handlePayment('stripe')}
-              variant="outline"
-              className="w-full border-2 border-purple-200 hover:bg-purple-50"
-              size="lg"
-              disabled={isProcessing}
-            >
-              {isProcessing && selectedMethod === 'stripe' ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing Payment...
-                </div>
-              ) : (
-                <>
-                  <CreditCard className="w-4 h-4 mr-2 text-purple-600" />
-                  Pay with Stripe
-                </>
-              )}
-            </Button>
-          </div>
+          <Button 
+            onClick={handlePayment}
+            className="w-full"
+            size="lg"
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing Payment...
+              </div>
+            ) : (
+              'Pay with Razorpay'
+            )}
+          </Button>
 
           <Button onClick={onClose} variant="ghost" className="w-full" disabled={isProcessing}>
             Cancel
@@ -803,529 +1351,434 @@ const PaymentModal = ({ isOpen, onClose, amount, userName, onSuccess }) => {
 
 const MyMatchesPage = () => {
   const { matches } = useApp();
-  const [activeTab, setActiveTab] = useState('sent');
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'sent':
-        return <Clock className="w-4 h-4 text-orange-500" />;
-      case 'under_discussion':
-        return <Heart className="w-4 h-4 text-blue-500" />;
-      case 'finalized':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'sent': return 'Interest Sent';
-      case 'under_discussion': return 'Under Discussion';
-      case 'finalized': return 'Match Confirmed';
-      case 'rejected': return 'Declined';
-      default: return status;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'sent': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'under_discussion': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'finalized': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const filteredMatches = matches.filter(match => {
-    switch (activeTab) {
-      case 'sent': return match.status === 'sent' || match.status === 'under_discussion';
-      case 'confirmed': return match.status === 'finalized';
-      case 'rejected': return match.status === 'rejected';
-      default: return false;
-    }
-  });
-
-  return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">My Matches</h1>
-          <p className="text-muted-foreground">Track all your match interests and their current status</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-6 border-b border-border">
-          {[
-            { id: 'sent', label: 'My Interests Sent', count: matches.filter(m => m.status === 'sent' || m.status === 'under_discussion').length },
-            { id: 'confirmed', label: 'Matches Confirmed', count: matches.filter(m => m.status === 'finalized').length },
-            { id: 'rejected', label: 'Rejected / Pending', count: matches.filter(m => m.status === 'rejected').length }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 font-medium text-sm rounded-t-lg border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-              }`}
-            >
-              {tab.label}
-              {tab.count > 0 && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {tab.count}
-                </Badge>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-4">
-          {filteredMatches.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  No matches found
-                </h3>
-                <p className="text-muted-foreground">
-                  Start browsing profiles and express your interest!
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredMatches.map((match) => (
-              <Card key={match.id} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-shrink-0">
-                      <img 
-                        src={match.user.photo} 
-                        alt={match.user.name}
-                        className="w-20 h-20 rounded-lg object-cover border-2 border-border"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-3">
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">{match.user.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <span>{match.user.age} years</span>
-                            <span>•</span>
-                            <span>{match.user.profession}</span>
-                            <span>•</span>
-                            <MapPin className="w-3 h-3" />
-                            <span>{match.user.location}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(match.status)}
-                          <Badge className={getStatusColor(match.status)}>
-                            {getStatusText(match.status)}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Interest sent:</span>
-                            <span className="font-medium">{match.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">Amount paid:</span>
-                            <span className="font-medium">₹{match.amount}</span>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Mediator Area:</span>
-                            <span className="font-medium ml-1">{match.mediator.area}</span>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Mediator:</span>
-                            <span className="font-medium ml-1">{match.mediator.name}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {match.status === 'sent' && (
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                          <p className="text-sm text-blue-700">
-                            ⏳ Your interest has been sent. The mediator will contact both families within 24 hours.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+  if (matches.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <Heart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No matches yet</h3>
+          <p className="text-gray-600">Express interest in profiles to see them here</p>
         </div>
       </div>
-    </div>
-  );
-};
-
-const HelpFAQPage = () => {
-  const [expandedFaq, setExpandedFaq] = useState(null);
-
-  const faqs = [
-    {
-      question: "What is Viya?",
-      answer: "Viya is a trusted matrimonial platform that connects families through experienced mediators."
-    },
-    {
-      question: "How does Mediator Matching work?",
-      answer: "When you express interest in a profile, our local mediator contacts both families within 24 hours."
-    },
-    {
-      question: "Why is there a ₹199 connection fee?",
-      answer: "The connection fee covers mediator services, profile verification, and platform maintenance."
-    }
-  ];
-
-  const toggleFaq = (index) => {
-    setExpandedFaq(expandedFaq === index ? null : index);
-  };
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Help & Support</h1>
-          <p className="text-muted-foreground">Everything you need to know about using Viya</p>
-        </div>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Frequently Asked Questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="border border-border rounded-lg">
-                  <button
-                    onClick={() => toggleFaq(index)}
-                    className="w-full p-4 text-left flex items-center justify-between hover:bg-muted/50 transition-colors"
-                  >
-                    <span className="font-medium text-foreground">{faq.question}</span>
-                    {expandedFaq === index ? (
-                      <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  {expandedFaq === index && (
-                    <div className="px-4 pb-4">
-                      <p className="text-muted-foreground">{faq.answer}</p>
-                    </div>
-                  )}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">My Matches</h1>
+      
+      <div className="space-y-6">
+        {matches.map((match) => (
+          <Card key={match.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                    <User className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">{match.user.name}</h3>
+                    <p className="text-gray-600">{match.user.age} years • {match.user.profession}</p>
+                    <p className="text-sm text-gray-500">Mediator: {match.mediator.name}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact Support</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 border border-border rounded-lg">
-                <Phone className="w-5 h-5 mx-auto mb-2 text-primary" />
-                <h3 className="font-semibold text-foreground mb-2">Phone Support</h3>
-                <p className="text-sm text-muted-foreground">+91 98765 43210</p>
+                <div className="text-right">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    match.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                    match.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+                  </span>
+                  <p className="text-sm text-gray-500 mt-1">₹{match.amount}</p>
+                </div>
               </div>
-              <div className="text-center p-4 border border-border rounded-lg">
-                <Mail className="w-5 h-5 mx-auto mb-2 text-primary" />
-                <h3 className="font-semibold text-foreground mb-2">Email Support</h3>
-                <p className="text-sm text-muted-foreground">support@viya.com</p>
-              </div>
-              <div className="text-center p-4 border border-border rounded-lg">
-                <MessageCircle className="w-5 h-5 mx-auto mb-2 text-primary" />
-                <h3 className="font-semibold text-foreground mb-2">Live Chat</h3>
-                <p className="text-sm text-muted-foreground">Available on website</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
 };
 
 const AdminDashboard = () => {
-  const { allUsers, matches } = useApp();
-  const [selectedMatch, setSelectedMatch] = useState(null);
-  const [showMatchDetail, setShowMatchDetail] = useState(false);
+  const [activeTab, setActiveTab] = useState('matches');
+  const { matches, payments, commissions, setCommissions } = useApp();
 
-  const payments = [
-    {
-      id: 'PAY001',
-      matchId: 'M001',
-      userName: 'Priya Sharma',
-      amount: 199,
-      gateway: 'Razorpay',
-      status: 'completed',
-      date: '2024-06-08'
-    }
-  ];
+  const handleCommissionPayout = (commissionId: string) => {
+    setCommissions(commissions.map(commission => 
+      commission.id === commissionId 
+        ? { ...commission, status: 'paid' as const }
+        : commission
+    ));
+  };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'sent': return 'bg-orange-100 text-orange-800';
-      case 'finalized': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getRevenueReport = () => {
+    const totalRevenue = payments.reduce((sum, payment) => 
+      payment.status === 'completed' ? sum + payment.amount : sum, 0
+    );
+    const totalCommissions = commissions.reduce((sum, commission) => sum + commission.amount, 0);
+    const netRevenue = totalRevenue - totalCommissions;
+    
+    return { totalRevenue, totalCommissions, netRevenue };
+  };
+
+  const getSuccessReport = () => {
+    const totalMatches = matches.length;
+    const successfulMatches = matches.filter(match => match.status === 'accepted').length;
+    const successRate = totalMatches > 0 ? (successfulMatches / totalMatches) * 100 : 0;
+    
+    return { totalMatches, successfulMatches, successRate };
+  };
+
+  const getAreaWiseReport = () => {
+    const areaStats = matches.reduce((acc, match) => {
+      const area = match.mediator.area;
+      if (!acc[area]) {
+        acc[area] = { total: 0, successful: 0 };
+      }
+      acc[area].total++;
+      if (match.status === 'accepted') {
+        acc[area].successful++;
+      }
+      return acc;
+    }, {} as Record<string, { total: number; successful: number }>);
+    
+    return Object.entries(areaStats).map(([area, stats]) => ({
+      area,
+      total: stats.total,
+      successful: stats.successful,
+      successRate: stats.total > 0 ? (stats.successful / stats.total) * 100 : 0
+    }));
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage matches, payments, and mediator commissions</p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+      
+      <Tabs activeTab={activeTab} setActiveTab={setActiveTab} className="w-full">
+        <TabsList activeTab={activeTab} setActiveTab={setActiveTab}>
+          <TabsTrigger value="matches" activeTab={activeTab} setActiveTab={setActiveTab}>Match Management</TabsTrigger>
+          <TabsTrigger value="payments" activeTab={activeTab} setActiveTab={setActiveTab}>Payments</TabsTrigger>
+          <TabsTrigger value="commissions" activeTab={activeTab} setActiveTab={setActiveTab}>Commissions</TabsTrigger>
+          <TabsTrigger value="reports" activeTab={activeTab} setActiveTab={setActiveTab}>Reports</TabsTrigger>
+        </TabsList>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <TabsContent value="matches" activeTab={activeTab}>
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2">
-                <Users className="w-8 h-8 text-blue-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">{allUsers.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-8 h-8 text-green-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Matches</p>
-                  <p className="text-2xl font-bold">{matches.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="w-8 h-8 text-purple-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">₹{payments.reduce((sum, p) => sum + p.amount, 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-8 h-8 text-emerald-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
-                  <p className="text-2xl font-bold">85%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="matches" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="matches">Match Management</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="matches">
-            <Card>
-              <CardHeader>
-                <CardTitle>Match Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Match ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Target User</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+            <CardHeader>
+              <CardTitle>Match Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4">Match ID</th>
+                      <th className="text-left p-4">User</th>
+                      <th className="text-left p-4">Profile</th>
+                      <th className="text-left p-4">Mediator</th>
+                      <th className="text-left p-4">Status</th>
+                      <th className="text-left p-4">Amount</th>
+                      <th className="text-left p-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {matches.map((match) => (
-                      <TableRow key={match.id}>
-                        <TableCell className="font-medium">M{match.id}</TableCell>
-                        <TableCell>Current User</TableCell>
-                        <TableCell>{match.user.name}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(match.status)}>
+                      <tr key={match.id} className="border-b hover:bg-gray-50">
+                        <td className="p-4">{match.id}</td>
+                        <td className="p-4">Current User</td>
+                        <td className="p-4">{match.user.name}</td>
+                        <td className="p-4">{match.mediator.name}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            match.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                            match.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
                             {match.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{match.date}</TableCell>
-                        <TableCell>₹{match.amount}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedMatch(match);
-                                setShowMatchDetail(true);
-                              }}
-                            >
+                          </span>
+                        </td>
+                        <td className="p-4">₹{match.amount}</td>
+                        <td className="p-4">
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline">
                               <Eye className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="outline">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="payments">
+        <TabsContent value="payments" activeTab={activeTab}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4">Payment ID</th>
+                      <th className="text-left p-4">Match ID</th>
+                      <th className="text-left p-4">User</th>
+                      <th className="text-left p-4">Amount</th>
+                      <th className="text-left p-4">Gateway</th>
+                      <th className="text-left p-4">Status</th>
+                      <th className="text-left p-4">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((payment) => (
+                      <tr key={payment.id} className="border-b hover:bg-gray-50">
+                        <td className="p-4">{payment.id}</td>
+                        <td className="p-4">{payment.matchId}</td>
+                        <td className="p-4">{payment.userName}</td>
+                        <td className="p-4">₹{payment.amount}</td>
+                        <td className="p-4">{payment.gateway}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="p-4">{payment.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="commissions" activeTab={activeTab}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Mediator Commissions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4">Commission ID</th>
+                      <th className="text-left p-4">Mediator</th>
+                      <th className="text-left p-4">Area</th>
+                      <th className="text-left p-4">Match ID</th>
+                      <th className="text-left p-4">Amount</th>
+                      <th className="text-left p-4">Status</th>
+                      <th className="text-left p-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {commissions.map((commission) => (
+                      <tr key={commission.id} className="border-b hover:bg-gray-50">
+                        <td className="p-4">{commission.id}</td>
+                        <td className="p-4">{commission.mediatorName}</td>
+                        <td className="p-4">{commission.area}</td>
+                        <td className="p-4">{commission.matchId}</td>
+                        <td className="p-4">₹{commission.amount}</td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            commission.status === 'paid' ? 'bg-green-100 text-green-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {commission.status}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          {commission.status === 'pending' && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleCommissionPayout(commission.id)}
+                            >
+                              <DollarSign className="w-4 h-4 mr-1" />
+                              Pay
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports" activeTab={activeTab}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader>
-                <CardTitle>Payments Table</CardTitle>
+                <CardTitle className="text-lg">Revenue Report</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Payment ID</TableHead>
-                      <TableHead>Match ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Gateway</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.id}</TableCell>
-                        <TableCell>{payment.matchId}</TableCell>
-                        <TableCell>{payment.userName}</TableCell>
-                        <TableCell>₹{payment.amount}</TableCell>
-                        <TableCell>{payment.gateway}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(payment.status)}>
-                            {payment.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{payment.date}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                {(() => {
+                  const report = getRevenueReport();
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Revenue:</span>
+                        <span className="font-semibold">₹{report.totalRevenue}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Commissions:</span>
+                        <span className="font-semibold">₹{report.totalCommissions}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span>Net Revenue:</span>
+                        <span className="font-bold text-green-600">₹{report.netRevenue}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="reports">
             <Card>
               <CardHeader>
-                <CardTitle>Generate Reports</CardTitle>
+                <CardTitle className="text-lg">Success Report</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-semibold">This Month</h3>
+              <CardContent>
+                {(() => {
+                  const report = getSuccessReport();
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Total Matches:</span>
+                        <span className="font-semibold">{report.totalMatches}</span>
                       </div>
-                      <p className="text-2xl font-bold">₹398</p>
-                      <p className="text-sm text-muted-foreground">Total Revenue</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-green-600" />
-                        <h3 className="font-semibold">Success Rate</h3>
+                      <div className="flex justify-between">
+                        <span>Successful:</span>
+                        <span className="font-semibold text-green-600">{report.successfulMatches}</span>
                       </div>
-                      <p className="text-2xl font-bold">85%</p>
-                      <p className="text-sm text-muted-foreground">This Quarter</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPin className="w-5 h-5 text-purple-600" />
-                        <h3 className="font-semibold">Top Area</h3>
+                      <div className="flex justify-between border-t pt-2">
+                        <span>Success Rate:</span>
+                        <span className="font-bold">{report.successRate.toFixed(1)}%</span>
                       </div>
-                      <p className="text-lg font-bold">Bangalore</p>
-                      <p className="text-sm text-muted-foreground">Most Active</p>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Area-wise Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {getAreaWiseReport().slice(0, 3).map((area, index) => (
+                    <div key={index} className="text-sm">
+                      <div className="flex justify-between">
+                        <span className="truncate">{area.area}</span>
+                        <span className="font-semibold">{area.successRate.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
 
-        <Dialog open={showMatchDetail} onOpenChange={setShowMatchDetail}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Match Details</DialogTitle>
-            </DialogHeader>
-            {selectedMatch && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">User Details</h4>
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Name:</strong> {selectedMatch.user.name}</p>
-                      <p><strong>Age:</strong> {selectedMatch.user.age}</p>
-                      <p><strong>Profession:</strong> {selectedMatch.user.profession}</p>
-                      <p><strong>Location:</strong> {selectedMatch.user.location}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Mediator Details</h4>
-                    <div className="space-y-1 text-sm">
-                      <p><strong>Name:</strong> {selectedMatch.mediator.name}</p>
-                      <p><strong>Area:</strong> {selectedMatch.mediator.area}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Mark as Finalized
-                  </Button>
-                  <Button variant="outline">
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Mark as Rejected
-                  </Button>
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Area-wise Report</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-4">Area</th>
+                      <th className="text-left p-4">Total Matches</th>
+                      <th className="text-left p-4">Successful Matches</th>
+                      <th className="text-left p-4">Success Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getAreaWiseReport().map((area, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="p-4">{area.area}</td>
+                        <td className="p-4">{area.total}</td>
+                        <td className="p-4">{area.successful}</td>
+                        <td className="p-4">
+                          <div className="flex items-center">
+                            <span className="mr-2">{area.successRate.toFixed(1)}%</span>
+                            <div className="w-20 h-2 bg-gray-200 rounded-full">
+                              <div 
+                                className="h-2 bg-green-500 rounded-full"
+                                style={{ width: `${area.successRate}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+const HelpFAQPage = () => {
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Help & FAQ</h1>
+      
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>How does the matrimony service work?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700">
+              Browse profiles, express interest by paying a small fee, and our mediators will facilitate the connection between families.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>What is the connection fee?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700">
+              The connection fee is ₹199 per profile. This helps us maintain quality service and compensate our mediators.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>How do mediators work?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700">
+              Our trained mediators contact both families within 24 hours to facilitate introductions and arrange meetings if both parties are interested.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -1334,15 +1787,13 @@ const AdminDashboard = () => {
 // Main App Component
 const SingleMatrimonyApp = () => {
   const [currentPage, setCurrentPage] = useState('home');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showInterestModal, setShowInterestModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser] = useState(null);
-  const [matches, setMatches] = useState([]);
-  const { toast, toasts } = useToast();
+  const { isAuthenticated, matches, setMatches } = useApp();
+  const { toast } = useToast();
 
-  const handleProfileClick = (user) => {
+  const handleProfileClick = (user: User) => {
     setSelectedUser(user);
     setCurrentPage('profile');
   };
@@ -1369,7 +1820,7 @@ const SingleMatrimonyApp = () => {
       const newMatch = {
         id: Date.now().toString(),
         user: selectedUser,
-        status: 'sent',
+        status: 'sent' as const,
         mediator: { 
           area: selectedUser.location + " Central", 
           name: "Mrs. Lakshmi Devi" 
@@ -1380,15 +1831,6 @@ const SingleMatrimonyApp = () => {
       setMatches([newMatch, ...matches]);
     }
     setCurrentPage('matches');
-  };
-
-  const contextValue = {
-    isAuthenticated,
-    setIsAuthenticated,
-    currentUser,
-    allUsers: mockUsers,
-    matches,
-    setMatches
   };
 
   const renderPage = () => {
@@ -1415,45 +1857,35 @@ const SingleMatrimonyApp = () => {
   };
 
   return (
-    <AppContext.Provider value={contextValue}>
-      <div className="min-h-screen bg-background">
-        <Header currentPage={currentPage} onNavigate={setCurrentPage} />
-        {renderPage()}
-        
-        <InterestModal 
-          isOpen={showInterestModal}
-          onClose={() => setShowInterestModal(false)}
-          user={selectedUser}
-          onPayment={handlePayment}
-        />
-        
-        <PaymentModal 
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          amount={199}
-          userName={selectedUser?.name || ''}
-          onSuccess={handlePaymentSuccess}
-        />
-
-        {/* Toast Notifications */}
-        <div className="fixed top-4 right-4 z-50 space-y-2">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`p-4 rounded-lg shadow-lg border max-w-sm ${
-                toast.variant === 'destructive'
-                  ? 'bg-red-50 border-red-200 text-red-800'
-                  : 'bg-white border-gray-200 text-gray-800'
-              }`}
-            >
-              <h4 className="font-semibold">{toast.title}</h4>
-              <p className="text-sm">{toast.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </AppContext.Provider>
+    <div className="min-h-screen bg-background">
+      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
+      {renderPage()}
+      
+      <InterestModal 
+        isOpen={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+        user={selectedUser}
+        onPayment={handlePayment}
+      />
+      
+      <PaymentModal 
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        amount={199}
+        userName={selectedUser?.name || ''}
+        onSuccess={handlePaymentSuccess}
+      />
+    </div>
   );
 };
 
-export default SingleMatrimonyApp;
+// Root App with Provider
+const App = () => {
+  return (
+    <AppProvider>
+      <SingleMatrimonyApp />
+    </AppProvider>
+  );
+};
+
+export default App;
